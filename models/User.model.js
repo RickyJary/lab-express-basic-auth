@@ -1,6 +1,9 @@
 // models/User.model.js
 const { Schema, model } = require('mongoose');
 
+const EMAIL_PATTERN =
+  /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+
 const userSchema = new Schema(
   {
     username: {
@@ -13,6 +16,7 @@ const userSchema = new Schema(
       type: String,
       required: [true, 'Email is required.'],
       unique: true,
+      match: [EMAIL_PATTERN, "Email is invalid"],
       lowercase: true,
       trim: true
     },
@@ -25,5 +29,23 @@ const userSchema = new Schema(
     timestamps: true
   }
 );
+
+userSchema.pre("save", function (next) {
+  const user = this;
+
+  if (user.isModified("password")) {
+    bcrypt.hash(user.passwordHash, 10)
+    .then ((hash) => {
+      user.passwordHash = hash;
+      next();
+    });
+  } else {
+    next();
+  }
+});
+
+userSchema.methods.checkPassword = function (password) {
+  return bcrypt.compare(password, this.passwordHash)
+}
 
 module.exports = model('User', userSchema);
