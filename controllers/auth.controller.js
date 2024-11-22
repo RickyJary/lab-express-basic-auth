@@ -9,13 +9,7 @@ module.exports.signUp = (req, res, next) => {
     res.render('auth/signup')
 }
 
-module.exports.doSignUp = (req, res, next) => {
-    User.create(req.body)
-    .then((user) => {
-        user.checkPassword(req.body.passwordHash);
-        res.redirect("/")
-    })
-}
+
 // POST route ==> to process form data
 
 module.exports.doSignUp = (req, res, next) => {
