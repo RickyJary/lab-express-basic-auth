@@ -22,7 +22,7 @@ module.exports.doSignUp = (req, res, next) => {
     User.create(req.body)
     .then((user) => {
         user.checkPassword(req.body.passwordHash)
-        res.redirect("/login");
+        res.redirect("/logIn");
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
@@ -36,4 +36,30 @@ module.exports.doSignUp = (req, res, next) => {
         next(err);
       }
     })
+}
+
+module.exports.logIn = (req, res, next) => {
+  res.render("auth/logIn")
+}
+
+module.exports.doLogIn = (req, res, next) => {
+  const { email, passwordHash } = req.body;
+  User.findOne({ email })
+  .then((user) => {
+    if(!user) {
+      res.redirect("/logIn");
+    } else {
+      user.checkPassword(passwordHash)
+      .then((match) => {
+        if(match) {
+          res.redirect("/profile");
+        } else {
+          res.redirect("/logIn")
+        }
+      })
+    }
+  })
+  .catch((err) => {
+    console.error(err)
+  })
 }
