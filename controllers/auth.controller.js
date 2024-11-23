@@ -38,22 +38,34 @@ module.exports.logIn = (req, res, next) => {
 
 module.exports.doLogIn = (req, res, next) => {
   const { email, passwordHash } = req.body;
+
+  const renderWithErrors = () => {
+    res.render("auth/login", {
+      email,
+      error: "Email o constraseña incorrectos"
+    })
+  }
   User.findOne({ email })
   .then((user) => {
-    if(!user) {
-      res.redirect("/logIn");
-    } else {
-      user.checkPassword(passwordHash)
+    if(user) {
+      return user.checkPassword(passwordHash)
       .then((match) => {
         if(match) {
+          req.session.userId = user.id;
           res.redirect("/profile");
         } else {
-          res.redirect("/logIn")
+          renderWithErrors();
         }
       })
+    } else {
+      renderWithErrors();
     }
   })
-  .catch((err) => {
-    console.error(err)
-  })
+  .catch((err) => next(err))
+}
+
+module.exports.logOut = (req, res, next) => {
+  req.session.destroy();
+  res.clearCookie("express-cookie");
+  res.redirect("/login")
 }
